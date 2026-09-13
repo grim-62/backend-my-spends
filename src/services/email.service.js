@@ -6,10 +6,6 @@
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
-console.log("all env",process.env.EMAIL_SERVICE,process.env.EMAIL_USER,process.env.EMAIL_PASSWORD)
-console.log("password length:", process.env.EMAIL_PASSWORD?.length);
-console.log("password JSON:", JSON.stringify(process.env.EMAIL_PASSWORD));
-
 // Email configuration
 const transporter = nodemailer.createTransport({
   service: 'smtp.gmail.com',
