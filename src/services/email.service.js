@@ -1,21 +1,14 @@
 /**
  * Email Service Module
- * Handles sending OTP and other emails via nodemailer
+ * Handles sending OTP and other emails via Resend
  */
 
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const logger = require('../utils/logger');
 
 // Email configuration
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER?.trim(),
-    pass: process.env.EMAIL_PASSWORD?.trim(),
-  },
-});
+const resend = new Resend(process.env.RESEND_API);
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@resend.dev';
 
 
 /**
@@ -40,8 +33,8 @@ const generateOTP = (length = 4) => {
  */
 const sendOTPEmail = async (email, otp) => {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: email,
       subject: 'SpendSense - Verify Your Email',
       html: `
@@ -57,9 +50,7 @@ const sendOTPEmail = async (email, otp) => {
           <p style="color: #999; font-size: 12px;">SpendSense Team</p>
         </div>
       `,
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     logger.info(`OTP email sent to ${email}`);
   } catch (error) {
     logger.error(`Failed to send OTP email to ${email}: ${error.message}`);
@@ -75,8 +66,8 @@ const sendOTPEmail = async (email, otp) => {
  */
 const sendWelcomeEmail = async (email, username) => {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: email,
       subject: 'Welcome to SpendSense!',
       html: `
@@ -87,9 +78,7 @@ const sendWelcomeEmail = async (email, username) => {
           <p style="color: #666; margin-top: 20px;">Best regards,<br>SpendSense Team</p>
         </div>
       `,
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     logger.info(`Welcome email sent to ${email}`);
   } catch (error) {
     logger.error(`Failed to send welcome email to ${email}: ${error.message}`);
@@ -98,8 +87,7 @@ const sendWelcomeEmail = async (email, username) => {
 };
 
 module.exports = {
-    transporter,
-    generateOTP,
-    sendOTPEmail,
-    sendWelcomeEmail,
+  generateOTP,
+  sendOTPEmail,
+  sendWelcomeEmail,
 };
