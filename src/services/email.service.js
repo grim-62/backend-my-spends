@@ -101,7 +101,8 @@ const sendWelcomeEmail = async (email, username) => {
 };
 
 module.exports = {
-  generateOTP,
-  sendOTPEmail,
-  sendWelcomeEmail,
+    transporter,
+    generateOTP,
+    sendOTPEmail,
+    sendWelcomeEmail,
 };
