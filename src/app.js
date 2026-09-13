@@ -20,7 +20,6 @@ const transactionRoutes = require('./routes/transaction.routes');
 const aiRoutes = require('./routes/ai.routes');
 
 const logger = require('./utils/logger');
-const { transporter } = require('./services/email.service');
 
 // Initialize Express app
 const app = express();
@@ -89,25 +88,6 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/ai', aiRoutes);
-app.get('/test-email', async (req, res) => {
-  try {
-    await transporter.verify();
-
-    res.json({
-      success: true,
-      message: 'SMTP connection works'
-    });
-  } catch (error) {
-    console.error('SMTP TEST ERROR:', error);
-
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      code: error.code,
-      command: error.command
-    });
-  }
-});
 
 /**
  * Root endpoint
