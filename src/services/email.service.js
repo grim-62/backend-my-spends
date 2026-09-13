@@ -6,14 +6,19 @@
 const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
+console.log("all env",process.env.EMAIL_SERVICE,process.env.EMAIL_USER,process.env.EMAIL_PASSWORD)
+console.log("password length:", process.env.EMAIL_PASSWORD?.length);
+console.log("password JSON:", JSON.stringify(process.env.EMAIL_PASSWORD));
+
 // Email configuration
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  service: 'smtp.gmail.com',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    user: process.env.EMAIL_USER?.trim(),
+    pass: process.env.EMAIL_PASSWORD?.trim(),
   },
 });
+
 
 /**
  * Generate a random OTP
