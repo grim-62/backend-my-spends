@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 
 // Email configuration
 const resend = new Resend(process.env.RESEND_API);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@resend.dev';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply-save-spend@resend.dev';
 
 
 /**
