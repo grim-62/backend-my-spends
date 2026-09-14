@@ -5,7 +5,6 @@
 
 const Transaction = require('../models/Transaction');
 const Budget = require('../models/Budget');
-const { categorizeTransaction } = require('../services/gemini.service');
 const { isValidAmount, isValidPaymentMethod } = require('../utils/validators');
 const logger = require('../utils/logger');
 

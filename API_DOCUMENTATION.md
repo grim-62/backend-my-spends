@@ -424,26 +424,6 @@
  * - 500: Server error
  */
 
-// ============ TRANSACTION CATEGORIES ============
-
-/**
- * Valid Categories:
- * - Food & Dining
- * - Transport
- * - Bills & Utilities
- * - Shopping
- * - Medical
- * - Entertainment
- * - Education
- * - Personal Care
- * - Home & Living
- * - Investment
- * - Salary (Income)
- * - Freelance (Income)
- * - Bonus (Income)
- * - Refund
- * - Others
- */
 
 // ============ PAYMENT METHODS ============
 

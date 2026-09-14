@@ -17,8 +17,7 @@ const transactionSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: [true, 'Description is required'],
-      trim: true,
+description re      trim: true,
       maxlength: [200, 'Description cannot exceed 200 characters'],
     },
     amount: {
@@ -55,7 +54,7 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: [500, 'Note cannot exceed 500 characters'],
-      default: null,
+      default: '',
     },
     receiptUrl: {
       type: String,
