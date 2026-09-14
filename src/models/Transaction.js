@@ -23,7 +23,7 @@ const transactionSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: [true, 'Amount is required'],
-      min: [0, 'Amount must be greater than or equal to 0'],
+      min: [1, 'Amount must be greater than or equal to 1'],
       validate: {
         validator: (value) => !isNaN(value) && isFinite(value),
         message: 'Amount must be a valid number',
