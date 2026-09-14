@@ -76,7 +76,7 @@ const wrapEmailBody = (innerContent) => `
                 font-size: 24px;
                 font-weight: 700;
                 color: #FFFFFF;
-              ">B</td>
+              ">P/W</td>
             </tr>
           </table>
         </td>
