@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 
 // Email configuration — Gmail SMTP, same pattern used elsewhere in this project
 const transporter = nodemailer.createTransport({
-  host: 'smtp.example.com',
+  host: 'google',
   port: 587,
   secure: false,
   auth: {

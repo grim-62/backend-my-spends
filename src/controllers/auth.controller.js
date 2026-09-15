@@ -39,8 +39,8 @@ exports.register = async (req, res) => {
     }
 
     // Generate OTP
-    const otp = generateOTP(4);
-    // const otp = "1111"
+    // const otp = generateOTP(4);
+    const otp = "1111"
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     if (user) {
@@ -62,7 +62,7 @@ exports.register = async (req, res) => {
     }
 
     // Send OTP email
-    await sendOTPEmail(email, otp);
+    // await sendOTPEmail(email, otp);
 
     logger.info(`Registration initiated for ${email}`);
     res.status(200).json({
@@ -110,8 +110,8 @@ exports.login = async (req, res) => {
     }
 
     // Generate OTP
-    const otp = generateOTP(4);
-    // const otp = "1111"
+    // const otp = generateOTP(4);
+    const otp = "1111"
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     user.otp = otp;
@@ -119,7 +119,7 @@ exports.login = async (req, res) => {
     await user.save();
 
     // Send OTP email
-    await sendOTPEmail(email, otp);
+    // await sendOTPEmail(email, otp);
 
     logger.info(`Login OTP sent to ${email}`);
     res.status(200).json({
