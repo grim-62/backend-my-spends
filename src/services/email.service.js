@@ -1,23 +1,36 @@
-/**
- * Email Service Module
- * Handles sending OTP and other emails via Resend
- */
-
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const logger = require('../utils/logger');
 
-// Email configuration
-const resend = new Resend(process.env.RESEND_API);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply-save-spend@resend.dev';
+// Email configuration — Gmail SMTP, same pattern used elsewhere in this project
+const transporter = nodemailer.createTransport({
+  host: 'smtp.example.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER?.trim(),
+    pass: process.env.EMAIL_PASSWORD?.replace(/\s/g, ''), // strips accidental spaces from a pasted App Password
+  },
+});
 
-// Brand palette — matches the app's theme (SpendSense / Bahi)
+// Verify the connection on startup so config errors surface immediately
+transporter.verify((err) => {
+  if (err) {
+    logger.error(`Mailer config error: ${err.message}`);
+  } else {
+    logger.info('Mailer ready to send emails');
+  }
+});
+
+const FROM_EMAIL = process.env.EMAIL_USER;
+const FROM_NAME = 'PennyWise';
+
+// Brand palette — matches the app's theme
 const ACCENT = '#CC785C';
-const BG_OUTER = '#F5F3EE';   // warm oatmeal, matches app's light background
-const CARD_BG = '#171716';    // near-black warm gray, matches app's dark surface
+const BG_OUTER = '#F5F3EE'; // warm oatmeal, matches app's light background
+const CARD_BG = '#171716'; // near-black warm gray, matches app's dark surface
 const TEXT_PRIMARY = '#ECECE9';
 const TEXT_SECONDARY = '#A8A79E';
-const BOX_BG = '#232322';     // matches SurfaceDark
-const BOX_BORDER = '#3A3A38';
+const BOX_BG = '#232322'; // matches SurfaceDark
 
 /**
  * Generate a random OTP
@@ -92,7 +105,7 @@ const wrapEmailBody = (innerContent) => `
       </tr>
       <tr>
         <td style="text-align: center; padding-top: 24px;">
-          <p style="color: ${TEXT_SECONDARY}; font-size: 12px; margin: 0;">Bahi — your account book, digitized.</p>
+          <p style="color: ${TEXT_SECONDARY}; font-size: 12px; margin: 0;">PennyWise — your account book, digitized.</p>
         </td>
       </tr>
     </table>
@@ -125,8 +138,8 @@ const sendOTPEmail = async (email, otp) => {
       </p>
     `;
 
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await transporter.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: email,
       subject: 'Your PennyWise verification code',
       html: wrapEmailBody(inner),
@@ -151,7 +164,7 @@ const sendWelcomeEmail = async (email, username) => {
         Welcome, ${username}
       </h2>
       <p style="color: ${TEXT_SECONDARY}; font-size: 14px; margin: 0 0 24px; text-align: center; line-height: 1.5;">
-        Your account is ready. Start logging your spending and let Bahi keep the ledger for you.
+        Your account is ready. Start logging your spending and let PennyWise keep the ledger for you.
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
@@ -165,16 +178,16 @@ const sendWelcomeEmail = async (email, username) => {
               text-decoration: none;
               padding: 14px 32px;
               border-radius: 50px;
-            ">Open Bahi</a>
+            ">Open PennyWise</a>
           </td>
         </tr>
       </table>
     `;
 
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await transporter.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: email,
-      subject: 'Welcome to Bahi',
+      subject: 'Welcome to PennyWise',
       html: wrapEmailBody(inner),
     });
     logger.info(`Welcome email sent to ${email}`);
