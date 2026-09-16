@@ -152,8 +152,7 @@ const wrapEmailBody = (innerContent, preheader = '') => `
  * @returns {Promise<void>}
  */
 const sendOTPEmail = async (email, otp) => {
-  try {
-    const inner = `
+  const inner = `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td style="text-align: center; padding-bottom: 4px;">
@@ -200,7 +199,8 @@ const sendOTPEmail = async (email, otp) => {
       </p>
     `;
 
-    await transporter.sendMail({
+  try {
+    const info = await transporter.sendMail({
       from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: email,
       subject: 'Your PennyWise verification code',
@@ -209,10 +209,15 @@ const sendOTPEmail = async (email, otp) => {
         `Your PennyWise verification code is ${otp}. It expires in 10 minutes.`
       ),
     });
-    logger.info(`OTP email sent to ${email}`);
+    console.log('Email sent:', info.messageId);
   } catch (error) {
-    logger.error(`Failed to send OTP email to ${email}: ${error.message}`);
-    throw new Error('Failed to send OTP email');
+    console.error('Actual email sending error:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      message: error.message,
+    });
+    throw error;
   }
 };
 
@@ -304,6 +309,7 @@ const sendWelcomeEmail = async (email, username) => {
       subject: 'Welcome to PennyWise',
       html: wrapEmailBody(inner, `Welcome to PennyWise, ${username}! Your account is ready.`),
     });
+
     logger.info(`Welcome email sent to ${email}`);
   } catch (error) {
     logger.error(`Failed to send welcome email to ${email}: ${error.message}`);
