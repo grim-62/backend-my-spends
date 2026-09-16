@@ -4,8 +4,9 @@ const logger = require('../utils/logger');
 // Email configuration — Gmail SMTP, same pattern used elsewhere in this project
 const transporter = nodemailer.createTransport({
   host: 'smtp.hostinger.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
+  family: 4,
   auth: {
     user: process.env.EMAIL_USER?.trim(),
     pass: process.env.EMAIL_PASSWORD?.replace(/\s/g, ''), // strips accidental spaces from a pasted App Password
@@ -203,7 +204,10 @@ const sendOTPEmail = async (email, otp) => {
       from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: email,
       subject: 'Your PennyWise verification code',
-      html: wrapEmailBody(inner, `Your PennyWise verification code is ${otp}. It expires in 10 minutes.`),
+      html: wrapEmailBody(
+        inner,
+        `Your PennyWise verification code is ${otp}. It expires in 10 minutes.`
+      ),
     });
     logger.info(`OTP email sent to ${email}`);
   } catch (error) {
