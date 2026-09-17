@@ -1,10 +1,21 @@
 const { Resend } = require('resend');
 const logger = require('../utils/logger');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_EMAIL = process.env.EMAIL_FROM;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const FROM_EMAIL = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 const FROM_NAME = 'PennyWise';
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+const ensureEmailConfig = () => {
+  const missing = [];
+
+  if (!RESEND_API_KEY) missing.push('RESEND_API_KEY');
+  if (!FROM_EMAIL) missing.push('EMAIL_FROM');
+
+  if (missing.length > 0) {
+    throw new Error(`Email service is not configured. Missing environment variables: ${missing.join(', ')}`);
+  }
+};
 
 // Brand palette
 const ACCENT = '#CC785C';
@@ -230,6 +241,8 @@ const sendOTPEmail = async (email, otp) => {
   `;
 
   try {
+    ensureEmailConfig();
+
     const { data, error } = await resend.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: [email],
@@ -322,6 +335,8 @@ const sendWelcomeEmail = async (email, username) => {
   `;
 
   try {
+    ensureEmailConfig();
+
     const { data, error } = await resend.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: [email],
