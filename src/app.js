@@ -74,6 +74,8 @@ app.use(requestLogger);
 /**
  * Health Check Endpoint
  */
+
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
