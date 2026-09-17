@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
 const VALID_CATEGORIES = [
   'Food & Dining',
@@ -172,131 +172,8 @@ const generateSummary = async (transactions, month) => {
   }
 };
 
-const buildCashflowContext = (transactions) => {
-  if (!transactions || transactions.length === 0) {
-    return {
-      totalIncome: 0,
-      totalExpense: 0,
-      netCashflow: 0,
-      averageMonthlyExpense: 0,
-      topCategories: [],
-      recentTransactions: [],
-      monthsTracked: 0,
-    };
-  }
-
-  const totalIncome = transactions
-    .filter((t) => t.isIncome)
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-  const totalExpense = transactions
-    .filter((t) => !t.isIncome)
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-  const categoryMap = {};
-  transactions
-    .filter((t) => !t.isIncome)
-    .forEach((t) => {
-      const category = t.category || 'Others';
-      categoryMap[category] = (categoryMap[category] || 0) + Number(t.amount || 0);
-    });
-
-  const topCategories = Object.entries(categoryMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([category, amount]) => ({ category, amount }));
-
-  const dates = transactions
-    .map((t) => new Date(t.date))
-    .filter((d) => !Number.isNaN(d.getTime()))
-    .sort((a, b) => a - b);
-
-  const earliest = dates[0];
-  const latest = dates[dates.length - 1];
-  const monthsTracked = earliest && latest
-    ? Math.max(1, (latest.getFullYear() - earliest.getFullYear()) * 12 + (latest.getMonth() - earliest.getMonth()) + 1)
-    : 1;
-
-  const averageMonthlyExpense = monthsTracked > 0 ? totalExpense / monthsTracked : totalExpense;
-
-  const recentTransactions = transactions
-    .slice(0, 10)
-    .map((t) => ({
-      description: t.description || 'Unnamed',
-      amount: Number(t.amount || 0),
-      category: t.category || 'Others',
-      isIncome: Boolean(t.isIncome),
-      date: new Date(t.date).toISOString().slice(0, 10),
-    }));
-
-  return {
-    totalIncome,
-    totalExpense,
-    netCashflow: totalIncome - totalExpense,
-    averageMonthlyExpense,
-    topCategories,
-    recentTransactions,
-    monthsTracked,
-  };
-};
-
-const askCashflowQuestion = async (transactions, question) => {
-  try {
-    const cashflow = buildCashflowContext(transactions);
-    const prompt = `
-    You are a helpful personal finance assistant.
-    Answer the user's cashflow question using only the transaction data provided below.
-    Be practical, honest, and concise. If there is not enough data, say so clearly.
-
-    User question: "${question}"
-
-    Transaction data summary:
-    - Total income: ₹${cashflow.totalIncome}
-    - Total expenses: ₹${cashflow.totalExpense}
-    - Net cashflow: ₹${cashflow.netCashflow}
-    - Average monthly expense: ₹${cashflow.averageMonthlyExpense.toFixed(2)}
-    - Months tracked: ${cashflow.monthsTracked}
-    - Top spending categories:
-      ${cashflow.topCategories.length > 0
-        ? cashflow.topCategories.map((item) => `- ${item.category}: ₹${item.amount}`).join('\n')
-        : '- No spending categories yet'}
-    - Recent transactions:
-      ${cashflow.recentTransactions.length > 0
-        ? cashflow.recentTransactions
-            .map((item) => `- ${item.date} | ${item.description} | ${item.isIncome ? 'Income' : 'Expense'} | ₹${item.amount} | ${item.category}`)
-            .join('\n')
-        : '- No recent transactions'}
-
-    Instructions:
-    1. Give a direct answer to the user question.
-    2. If the question is about affordability, compare the planned amount to the monthly budget and cashflow.
-    3. If needed, mention a rough monthly runway or savings cushion.
-    4. Keep it friendly and easy to read, like a finance coach.
-    5. Do not invent transactions or numbers.
-    6. Return only the answer text, no JSON.
-    `;
-
-    const result = await model.generateContent(prompt);
-    const answer = await result.response.text();
-
-    logger.info(`Cashflow question answered: ${question}`);
-    return answer.trim() || 'I cannot answer that with the current transaction data.';
-  } catch (error) {
-    logger.error(`Gemini cashflow question error: ${error.message}`);
-
-    const cashflow = buildCashflowContext(transactions);
-    if (!transactions || transactions.length === 0) {
-      return 'I do not have enough transaction data yet to answer that confidently. Add a few transactions first and ask again.';
-    }
-
-    const net = cashflow.netCashflow;
-    return `Based on your current data, your net cashflow is ₹${net}. I suggest checking your monthly expenses and savings cushion before making a big purchase. If you need a more tailored answer, share the exact amount and timeline.`;
-  }
-};
-
 module.exports = {
   categorizeTransaction,
   parseQuickAdd,
   generateSummary,
-  askCashflowQuestion,
 };
