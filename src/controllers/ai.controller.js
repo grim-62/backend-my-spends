@@ -8,6 +8,7 @@ const {
   categorizeTransaction,
   parseQuickAdd,
   generateSummary,
+  askCashflowQuestion,
 } = require('../services/gemini.service');
 const { scanReceipt } = require('../services/ocr.service');
 const logger = require('../utils/logger');
@@ -197,6 +198,40 @@ exports.summary = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to generate summary',
+    });
+  }
+};
+
+/**
+ * Ask a financial question based on the user's cashflow
+ * POST /ai/ask
+ */
+exports.ask = async (req, res) => {
+  try {
+    const { question } = req.body;
+    const userId = req.user.userId;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Question is required',
+      });
+    }
+
+    const transactions = await Transaction.find({ userId }).sort({ date: -1 }).limit(500);
+    const answer = await askCashflowQuestion(transactions, question.trim());
+
+    res.status(200).json({
+      success: true,
+      question: question.trim(),
+      answer,
+      transactionCount: transactions.length,
+    });
+  } catch (error) {
+    logger.error(`Cashflow ask error: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to answer your cashflow question',
     });
   }
 };
