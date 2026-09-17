@@ -147,6 +147,8 @@ exports.scanReceipt = async (req, res) => {
   }
 };
 
+exports.ocr = exports.scanReceipt;
+
 /**
  * Generate expense summary
  * POST /ai/summary

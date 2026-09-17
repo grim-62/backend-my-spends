@@ -24,6 +24,7 @@ router.use(authenticate);
  */
 router.post('/quick-add', quickAdd);
 router.post('/scan-receipt', scanReceipt);
+router.post('/ocr', scanReceipt);
 router.post('/summary', summary);
 
 module.exports = router;

@@ -1,10 +1,37 @@
 /**
  * OCR Service Module
- * Handles receipt scanning using Tesseract or Google Vision API
+ * Handles receipt scanning using Tesseract
  */
 
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const Tesseract = require('tesseract.js');
 const logger = require('../utils/logger');
+
+const saveBase64Image = (imageBase64) => {
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    return null;
+  }
+
+  const matches = imageBase64.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/i);
+  const base64Data = matches ? matches[3] : imageBase64;
+  const mimeType = matches ? matches[1] : 'image/png';
+  const extension = mimeType.includes('jpeg') ? 'jpg' : mimeType.split('/')[1] || 'png';
+  const tempFile = path.join(
+    os.tmpdir(),
+    `receipt-${Date.now()}-${Math.random().toString(16).slice(2)}.${extension}`
+  );
+
+  try {
+    fs.writeFileSync(tempFile, Buffer.from(base64Data, 'base64'));
+    logger.info(`Temporary receipt image saved: ${tempFile}`);
+    return tempFile;
+  } catch (error) {
+    logger.error(`Failed to save base64 receipt image: ${error.message}`);
+    return null;
+  }
+};
 
 /**
  * Extract text from image using Tesseract OCR
@@ -35,19 +62,18 @@ const extractTextFromImage = async (imagePath) => {
  * @returns {Promise<{merchant: string, amount: number, date: string, category: string, items: Array}>}
  */
 const scanReceipt = async (imageBase64, imagePath = null) => {
-  try {
-    let extractedText = '';
+  let tempImagePath = imagePath || null;
 
-    if (imagePath) {
-      extractedText = await extractTextFromImage(imagePath);
-    } else {
-      // For base64 image, would need to save temporarily or use Vision API
-      // For now, using Tesseract with buffer
-      logger.warn('Image processing for base64 not fully implemented');
-      extractedText = '';
+  try {
+    if (!tempImagePath && imageBase64) {
+      tempImagePath = saveBase64Image(imageBase64);
     }
 
-    // Parse receipt details from extracted text
+    if (!tempImagePath) {
+      throw new Error('Image data is required. Provide base64Image or imagePath.');
+    }
+
+    const extractedText = await extractTextFromImage(tempImagePath);
     const receiptDetails = parseReceiptText(extractedText);
 
     logger.info(`Receipt scanned: ${receiptDetails.merchant}`);
@@ -55,6 +81,14 @@ const scanReceipt = async (imageBase64, imagePath = null) => {
   } catch (error) {
     logger.error(`Receipt scanning error: ${error.message}`);
     throw error;
+  } finally {
+    if (imageBase64 && tempImagePath && !imagePath) {
+      try {
+        fs.unlinkSync(tempImagePath);
+      } catch (cleanupError) {
+        logger.warn(`Failed to clean temp OCR file: ${cleanupError.message}`);
+      }
+    }
   }
 };
 
